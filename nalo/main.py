@@ -25,7 +25,7 @@ class Settings(BaseSettings):
     nalo_api_key: SecretStr
     nalo_sender_id: str
 
-    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
+    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="allow")
 
 
 PhoneNumber.supported_regions = ["GH"]

@@ -8,4 +8,4 @@ services:
       - ./.env
     ports:
       - "${PORT:-5000}:5000"
-    command: ['uvicorn', '--host', '0.0.0.0', '--port', '5000', '--app-dir', 'nalo', 'main:app']
+    command: ['uvicorn', '--host', '0.0.0.0', '--root-path', '${ROOT:-/}', '--port', '5000', '--app-dir', 'nalo', 'main:app']
