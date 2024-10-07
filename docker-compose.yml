@@ -1,0 +1,11 @@
+services:
+  proxy:
+    restart: always
+    build:
+      context: .
+      target: ${ENV:-production}
+    env_file:
+      - ./.env
+    ports:
+      - "${PORT:-5000}:5000"
+    command: ['uvicorn', '--host', '0.0.0.0', '--port', '5000', '--app-dir', 'nalo', 'main:app']
