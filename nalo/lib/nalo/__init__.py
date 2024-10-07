@@ -20,7 +20,7 @@ async def send_sms(client: AsyncClient, recipient: str, message: str, sender: st
         "POST", "https://sms.nalosolutions.com/smsbackend/clientapi/Resl_Nalo/send-message/", json=payload
     )
     response = await client.send(request)
-    logger.debug(response.status_code, response.content)
+    logger.debug(f"{response.status_code} {response.content}")
     data = response.json()
     if "status" in data and int(data["status"]) == 1701:
         return data
