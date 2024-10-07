@@ -15,6 +15,6 @@ async def inject_sms(client: AsyncClient, endpoint: URL, sender: str, message: s
     }
     request = client.build_request("GET", endpoint, params=args)
     response = await client.send(request)
-    logger.debug(f"{response.status_code} {response.content}")
+    logger.debug(f"{response.status_code} {response.content.decode('utf-8')}")
     response.raise_for_status()
     return response.text
