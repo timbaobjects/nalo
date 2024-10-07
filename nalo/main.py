@@ -3,10 +3,11 @@
 from importlib import metadata
 from typing import Annotated
 
-from fastapi import BackgroundTasks, FastAPI
+from fastapi import BackgroundTasks, FastAPI, Request
 from httpx import AsyncClient, Headers
 from lib.apollo import inject_sms
 from lib.nalo import send_sms
+from loguru import logger
 from pydantic import BaseModel, Field, HttpUrl, NaiveDatetime, SecretStr, StringConstraints
 from pydantic.functional_validators import AfterValidator
 from pydantic_extra_types.phone_numbers import PhoneNumber
@@ -45,6 +46,15 @@ class Inbound(BaseModel):
 settings = Settings().model_dump()
 
 app = FastAPI()
+
+
+@app.middleware("http")
+async def request_logger_middleware(request: Request, call_next):
+    """Middleware for logging the request."""
+    request_body = await request.body()
+    logger.debug(f"{request.headers}\n{request_body.decode('utf-8')}")
+    response = await call_next(request)
+    return response
 
 
 @app.post("/")

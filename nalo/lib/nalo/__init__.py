@@ -1,11 +1,13 @@
 """Nalo API Library."""
 
 from httpx import AsyncClient
+from loguru import logger
 from pydantic import SecretStr
 
 from .exceptions import REGISTRY
 
 
+@logger.catch
 async def send_sms(client: AsyncClient, recipient: str, message: str, sender: str, api_key: SecretStr) -> dict:
     """Sends and SMS through the Nalo SMS API."""
     payload = {
@@ -18,14 +20,16 @@ async def send_sms(client: AsyncClient, recipient: str, message: str, sender: st
         "POST", "https://sms.nalosolutions.com/smsbackend/clientapi/Resl_Nalo/send-message/", json=payload
     )
     response = await client.send(request)
+    logger.debug(response.status_code, response.content)
     data = response.json()
-    if "status" in data and data["status"] == 1701:
+    if "status" in data and int(data["status"]) == 1701:
         return data
     else:
         if "code" in data:
-            if data["code"] in REGISTRY:
-                raise REGISTRY[data["code"]]()
+            code = int(data["code"])
+            if code in REGISTRY:
+                raise REGISTRY[code]()
             else:
-                raise REGISTRY[-1](data["code"], data["message"])
+                raise REGISTRY[-1](code, data["message"])
         else:
             raise REGISTRY[-1](message=str(data))
