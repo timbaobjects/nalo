@@ -3,7 +3,7 @@
 from importlib import metadata
 from typing import Annotated
 
-from fastapi import BackgroundTasks, FastAPI, Request
+from fastapi import BackgroundTasks, FastAPI, Form, Request
 from httpx import AsyncClient, Headers
 from lib.apollo import inject_sms
 from lib.nalo import send_sms
@@ -58,7 +58,7 @@ async def request_logger_middleware(request: Request, call_next):
 
 
 @app.post("/")
-async def webhook(inbound: Inbound, background_tasks: BackgroundTasks):
+async def webhook(inbound: Annotated[Inbound, Form()], background_tasks: BackgroundTasks):
     """Webhook for processing incoming messages from Nalo."""
     client = AsyncClient(headers=headers, verify=True)
     reply = await inject_sms(
