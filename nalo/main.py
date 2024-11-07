@@ -64,7 +64,5 @@ async def webhook(inbound: Annotated[Inbound, Form()], background_tasks: Backgro
     reply = await inject_sms(
         client, str(settings["apollo_endpoint"]), inbound.msisdn, inbound.msg, settings["apollo_secret"]
     )
-    background_tasks.add_task(
-        send_sms, client, inbound.msisdn, reply, settings["nalo_sender_id"], settings["nalo_api_key"]
-    )
+    background_tasks.add_task(send_sms, client, inbound.msisdn, reply, inbound.shortcode, settings["nalo_api_key"])
     return {"message": "OK"}
