@@ -3,7 +3,7 @@
 from importlib import metadata
 from typing import Annotated
 
-from fastapi import BackgroundTasks, FastAPI, Form, Request
+from fastapi import BackgroundTasks, FastAPI, Form, Query, Request, Response
 from httpx import AsyncClient, Headers
 from lib.apollo import inject_sms
 from lib.nalo import send_sms
@@ -24,6 +24,8 @@ class Settings(BaseSettings):
     apollo_secret: SecretStr
     nalo_api_key: SecretStr
     nalo_sender_id: str
+    outbound_username: str
+    outbound_password: str
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="allow")
 
@@ -41,6 +43,19 @@ class Inbound(BaseModel):
     network: Annotated[str, Field(min_length=1)]
     msg: Annotated[str, Field(min_length=1)]
     timestamp: NaiveDatetime
+
+
+class Outbound(BaseModel):
+    """Outbound data format.
+
+    This model describes the request parameters for outbound messages.
+    """
+
+    username: Annotated[str, Field(min_length=1)]
+    password: Annotated[str, Field(min_length=1)]
+    sender: Annotated[str, Field(alias="from")] = None
+    to: Annotated[PhoneNumber, AfterValidator(lambda x: x.lstrip("+"))]
+    text: Annotated[str, Field(min_length=1)]
 
 
 settings = Settings().model_dump()
@@ -66,3 +81,21 @@ async def webhook(inbound: Annotated[Inbound, Form()], background_tasks: Backgro
     )
     background_tasks.add_task(send_sms, client, inbound.msisdn, reply, inbound.shortcode, settings["nalo_api_key"])
     return {"message": "OK"}
+
+
+@app.get("/cgi-bin/sendsms")
+async def outgoing(outbound: Annotated[Outbound, Query()], background_tasks: BackgroundTasks):
+    """Outbound message processor."""
+    client = AsyncClient(headers=headers, verify=True)
+    if settings["outbound_username"] == outbound.username and settings["outbound_password"] == outbound.password:
+        background_tasks.add_task(
+            send_sms,
+            client,
+            outbound.to,
+            outbound.text,
+            outbound.sender or settings["nalo_sender_id"],
+            settings["nalo_api_key"],
+        )
+        return Response(content="0: Accepted for delivery", status_code=202, media_type="text/plain")
+    else:
+        return Response(content="Authorization failed for sendsms", status_code=403, media_type="text/plain")
