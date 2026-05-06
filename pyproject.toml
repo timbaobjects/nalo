@@ -13,10 +13,10 @@ pydantic-settings = "^2.12.0"
 pydantic-extra-types = {extras = ["phonenumbers"], version = "^2.10.6"}
 fastapi-cli = "^0.0.16"
 loguru = "^0.7.3"
-python-multipart = "^0.0.20"
+python-multipart = "^0.0.27"
 
 [tool.poetry.group.dev.dependencies]
-pytest = "^8.3.3"
+pytest = "^9.0.3"
 ruff = "^0.6.9"
 pre-commit = "^4.0.0"
 
